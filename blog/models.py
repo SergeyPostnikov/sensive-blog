@@ -1,7 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 
 
 class PostQuerySet(models.QuerySet):
@@ -13,6 +13,12 @@ class PostQuerySet(models.QuerySet):
         return Post.objects.annotate(
             Count('likes', distinct=True)
         ).order_by('-likes__count')
+
+    def prefetch_tags_count(self):
+        prefetch = Prefetch(
+            'tags',
+            queryset=Tag.objects.annotate(Count('posts')))
+        return self.prefetch_related(prefetch)
 
     def fetch_with_comments_count(self):
         '''function working better only on small sets'''
@@ -35,7 +41,6 @@ class Post(models.Model):
     slug = models.SlugField('Название в виде url', max_length=200)
     image = models.ImageField('Картинка')
     published_at = models.DateTimeField('Дата и время публикации')
-    objects = PostQuerySet.as_manager()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -50,6 +55,7 @@ class Post(models.Model):
         'Tag',
         related_name='posts',
         verbose_name='Теги')
+    objects = PostQuerySet.as_manager()    
 
     def __str__(self):
         return self.title
