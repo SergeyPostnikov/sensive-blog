@@ -10,9 +10,11 @@ class PostQuerySet(models.QuerySet):
         return posts_at_year
 
     def popular(self):
-        return Post.objects.annotate(
-            Count('likes', distinct=True)
-        ).order_by('-likes__count')
+        popular_posts = (
+            Post.objects
+            .annotate(Count('likes', distinct=True))
+            .order_by('-likes__count'))
+        return popular_posts
 
     def prefetch_tags_count(self):
         prefetch = Prefetch(
@@ -71,7 +73,12 @@ class Post(models.Model):
 
 class TagQuerySet(models.QuerySet):
     def popular(self):
-        return self.annotate(Count('posts')).order_by('-posts__count')
+        popular_tags = (
+            self
+            .annotate(Count('posts'))
+            .order_by('-posts__count')
+            )
+        return popular_tags
 
 
 class Tag(models.Model):
