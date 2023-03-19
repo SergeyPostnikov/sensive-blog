@@ -2,6 +2,8 @@ from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db.models import Count, Prefetch
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 
 
 class PostQuerySet(models.QuerySet):
@@ -37,6 +39,14 @@ class PostQuerySet(models.QuerySet):
             post.comments__count = count_for_id[post.id]
         posts = list(self)
         return posts
+
+    def get_object_or_404(self, slug):
+        try: 
+            obj = self.get(slug=slug)
+        except ObjectDoesNotExist:
+            raise Http404
+    
+        return obj
 
 
 class Post(models.Model):
